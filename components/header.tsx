@@ -4,23 +4,33 @@ import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Menu } from "lucide-react"
-import Link from "next/link" // Import Link for client-side navigation
+import { Menu, LogOut, User } from "lucide-react"
+import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export function Header() {
+  const { user, profile, signOut } = useAuth()
+  const router = useRouter()
+
   const navItems = [
     { name: "Features", href: "#features-section" },
     { name: "Pricing", href: "#pricing-section" },
-    { name: "Testimonials", href: "#testimonials-section" }, // Changed from Docs to Testimonials
+    { name: "Testimonials", href: "#testimonials-section" },
   ]
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault()
-    const targetId = href.substring(1) // Remove '#' from href
+    const targetId = href.substring(1)
     const targetElement = document.getElementById(targetId)
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: "smooth" })
     }
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
   }
 
   return (
@@ -44,11 +54,38 @@ export function Header() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="https://vercel.com/home" target="_blank" rel="noopener noreferrer" className="hidden md:block">
-            <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-2 rounded-full font-medium shadow-sm">
-              Try for Free
-            </Button>
-          </Link>
+          {user ? (
+            <>
+              <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/30 border border-border">
+                  <User className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">{profile?.full_name || 'User'}</span>
+                </div>
+                <Button
+                  onClick={handleSignOut}
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="hidden md:block">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground px-6 py-2 rounded-full font-medium">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/register" className="hidden md:block">
+                <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-2 rounded-full font-medium shadow-sm">
+                  Sign up
+                </Button>
+              </Link>
+            </>
+          )}
+
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="text-foreground">
@@ -65,17 +102,40 @@ export function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    onClick={(e) => handleScroll(e, item.href)} // Add onClick handler
+                    onClick={(e) => handleScroll(e, item.href)}
                     className="text-[#888888] hover:text-foreground justify-start text-lg py-2"
                   >
                     {item.name}
                   </Link>
                 ))}
-                <Link href="https://vercel.com/home" target="_blank" rel="noopener noreferrer" className="w-full mt-4">
-                  <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-2 rounded-full font-medium shadow-sm">
-                    Try for Free
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/30 border border-border mt-4">
+                      <User className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{profile?.full_name || 'User'}</span>
+                    </div>
+                    <Button
+                      onClick={handleSignOut}
+                      className="w-full mt-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" className="w-full mt-4">
+                      <Button variant="outline" className="w-full border-border hover:bg-card">
+                        Login
+                      </Button>
+                    </Link>
+                    <Link href="/register" className="w-full">
+                      <Button className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                        Sign up
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
